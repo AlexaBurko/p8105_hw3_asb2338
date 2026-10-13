@@ -4,11 +4,29 @@ author: "Alexa Burko"
 date: "2026-10-13"
 output: github_document
 ---
-## Section 0: Libraries
+## Section 0: Libraries and preferences
 ```{r message=F}
 
 library(tidyverse)
 library(p8105.datasets)
+library(patchwork)
+library(ggridges)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 
 ```
 
@@ -34,9 +52,8 @@ tmin has `r sum(is.na(ny_noaa$tmin))` missing observations
 
   noaa_df =
     ny_noaa |> 
-  filter(!if_all(c(prcp, snow, snwd, tmax, tmin), is.na)) |> 
-  separate(col = date, into = c("Year", "Month", "Day"), sep = "-") |> 
-  mutate(across(c(prcp:tmin), as.numeric)) |> 
+  separate(col = date, into = c("year", "month", "day"), sep = "-") |> 
+  mutate(across(c(year:tmin), as.numeric)) |> 
   mutate(
     prcp = prcp / 10,
     tmax = tmax / 10,
@@ -48,10 +65,62 @@ tmin has `r sum(is.na(ny_noaa$tmin))` missing observations
 I converted the precipitation variable from tenths of mm to mm and I conveted tmax and tmin from tenths of degrees celcius to degrees celcius
 
 ```{r}
-snow_obs <- table(noaa_df$snow, useNA = "no")
-
-head(sort(snow_obs, decreasing = TRUE), 3)
+noaa_df |> 
+  count(snow) |> 
+  arrange(desc(n))
 ```
 
 The most commonly observed values for snowfall are 0 mm, 25 mm, and 13 mm. It makes sense that the most commonly observed value for snowfall is 0 mm because it does not snow at all most days.
+
+```{r}
+noaa_df |> 
+  filter(month %in% c(1,7)) |> 
+  mutate(
+    month = case_match(
+      month,
+      1 ~ "January",
+      7 ~ "July"
+    )
+  ) |> 
+  group_by(id, year, month) |> 
+  mutate(avg_tmax = mean(tmax, na.rm=TRUE)) |> 
+  ggplot(aes(x=year, y = avg_tmax))+
+  geom_point()+
+  geom_smooth()+
+  facet_grid(.~month)+
+  labs(
+    x = "Year",
+    y = "Average Max Temperature (C)"
+  )
+```
+The temperature is lower and more variable in January than in July. There seems to be at least one outlier in July. Some of the other points may be considered outliers, though we would need to do further analyses to confirm this. 
+
+
+Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year
+```{r}
+plot_temp = noaa_df |> 
+  ggplot(aes(x = tmin, y = tmax))+
+  geom_hex() +  
+  labs(
+    x = "Maximum Temperature (C)",
+    y = "Maximum Temperature (C)"
+  )
+
+plot_snow = noaa_df |> 
+  filter(snow > 0, snow < 100) |> 
+  ggplot(aes(x = snow, y = factor(year)))+
+  geom_density_ridges() +  
+  labs(
+    x = "Snowfall (mm)",
+    y = "Year"
+  )
+
+plot_temp + plot_snow
+```
+
+
+# Problem 2
+```{r}
+
+```
 
