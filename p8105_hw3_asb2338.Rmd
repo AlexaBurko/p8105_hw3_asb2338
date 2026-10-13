@@ -2,7 +2,7 @@
 title: "p8105_hw3_asb2338"
 author: "Alexa Burko"
 date: "2026-10-13"
-output: html_document
+output: github_document
 ---
 ## Section 0: Libraries
 ```{r message=F}
