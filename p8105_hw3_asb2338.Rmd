@@ -8,7 +8,29 @@ output: html_document
 ```{r message=F}
 
 library(tidyverse)
+library(p8105.datasets)
 
 ```
 
+# Problem 1
+```{r}
+data("ny_noaa")
+
+
+```
+The data set has `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables. This data set contains the following variables: `r colnames(ny_noaa)`. 
+
+The average precipitation in the data set is `r round(mean(ny_noaa$prcp, na.rm = TRUE),2)` tenths of mm, the average snowfall in the data set is `r round(mean(ny_noaa$snow, na.rm = TRUE),2)` mm, and the average snow depth in the data set is `r round(mean(ny_noaa$snwd, na.rm = TRUE),2)` mm.
+
+Missing data is a big issue in this data set. The ID variable and the date variable both have `r sum(is.na(ny_noaa$id))` and `r sum(is.na(ny_noaa$date))` missing observations. However, the rest of the variables all have missing data.
+
+prcp has `r sum(is.na(ny_noaa$prcp))` missing observations, 
+snow has `r sum(is.na(ny_noaa$snow))` missing observations,
+snwd has `r sum(is.na(ny_noaa$snwd))` missing observations, 
+tmax has `r sum(is.na(ny_noaa$tmax))` missing observations, and
+tmin has `r sum(is.na(ny_noaa$tmin))` missing observations 
+
+```{r}
+
+```
 
