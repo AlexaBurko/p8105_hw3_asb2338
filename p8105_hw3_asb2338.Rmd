@@ -209,3 +209,4 @@ nhanes |>
 Total activity tends to increase as the day goes on before decreasing again. Women tend to have higher total activity than males. For those with more than high school, the high point of total activity is stable for longer than that of the other education categories. 
 
 
+# Problem 3
