@@ -16,11 +16,10 @@ library(p8105.datasets)
 ```{r}
 data("ny_noaa")
 
-
 ```
 The data set has `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables. This data set contains the following variables: `r colnames(ny_noaa)`. 
 
-The average precipitation in the data set is `r round(mean(ny_noaa$prcp, na.rm = TRUE),2)` tenths of mm, the average snowfall in the data set is `r round(mean(ny_noaa$snow, na.rm = TRUE),2)` mm, and the average snow depth in the data set is `r round(mean(ny_noaa$snwd, na.rm = TRUE),2)` mm.
+The average precipitation in the data set is `r round(mean(ny_noaa$prcp, na.rm = TRUE),2)` tenths of mm, the average snowfall in the data set is `r round(mean(ny_noaa$snow, na.rm = TRUE),2)` mm, and the average snow depth in the data set is `r round(mean(ny_noaa$snwd, na.rm = TRUE),2)` mm. 
 
 Missing data is a big issue in this data set. The ID variable and the date variable both have `r sum(is.na(ny_noaa$id))` and `r sum(is.na(ny_noaa$date))` missing observations. However, the rest of the variables all have missing data.
 
@@ -30,7 +29,29 @@ snwd has `r sum(is.na(ny_noaa$snwd))` missing observations,
 tmax has `r sum(is.na(ny_noaa$tmax))` missing observations, and
 tmin has `r sum(is.na(ny_noaa$tmin))` missing observations 
 
+## Data cleaning
 ```{r}
 
+  noaa_df =
+    ny_noaa |> 
+  filter(!if_all(c(prcp, snow, snwd, tmax, tmin), is.na)) |> 
+  separate(col = date, into = c("Year", "Month", "Day"), sep = "-") |> 
+  mutate(across(c(prcp:tmin), as.numeric)) |> 
+  mutate(
+    prcp = prcp / 10,
+    tmax = tmax / 10,
+    tmin = tmin / 10
+  )
+
+
 ```
+I converted the precipitation variable from tenths of mm to mm and I conveted tmax and tmin from tenths of degrees celcius to degrees celcius
+
+```{r}
+snow_obs <- table(noaa_df$snow, useNA = "no")
+
+head(sort(snow_obs, decreasing = TRUE), 3)
+```
+
+The most commonly observed values for snowfall are 0 mm, 25 mm, and 13 mm. It makes sense that the most commonly observed value for snowfall is 0 mm because it does not snow at all most days.
 

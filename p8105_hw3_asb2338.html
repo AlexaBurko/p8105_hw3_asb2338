@@ -377,6 +377,16 @@ of the variables all have missing data.</p>
 <p>prcp has 145838 missing observations, snow has 381221 missing
 observations, snwd has 591786 missing observations, tmax has 1134358
 missing observations, and tmin has 1134420 missing observations</p>
+<pre class="r"><code>  noaa_df =
+    ny_noaa |&gt; 
+  filter(!if_all(c(prcp, snow, snwd, tmax, tmin), is.na)) |&gt; 
+  separate(col = date, into = c(&quot;Year&quot;, &quot;Month&quot;, &quot;Day&quot;), sep = &quot;-&quot;) |&gt; 
+  mutate(across(c(prcp:tmin), as.numeric)) |&gt; 
+  mutate(
+    prcp = prcp * 10,
+    tmax = tmax * 10,
+    tmin = tmin * 10
+  )</code></pre>
 </div>
 
 
