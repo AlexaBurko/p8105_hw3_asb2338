@@ -95,8 +95,6 @@ noaa_df |>
 ```
 The temperature is lower and more variable in January than in July. There seems to be at least one outlier in July. Some of the other points may be considered outliers, though we would need to do further analyses to confirm this. 
 
-
-Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year
 ```{r}
 plot_temp = noaa_df |> 
   ggplot(aes(x = tmin, y = tmax))+
@@ -120,7 +118,94 @@ plot_temp + plot_snow
 
 
 # Problem 2
-```{r}
 
+## Load, tidy, and merge data sets
+```{r}
+demo_df =
+  read_csv("data/nhanes_covar.csv", skip = 4, na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  mutate(
+    sex = case_match(
+      sex,
+      1 ~ "Male",
+      2  ~ "Female"
+    ),
+      education = case_match(
+      education,
+      1 ~ "Less than high school",
+      2 ~ "High school equivalent",
+      3 ~ "More than high school"
+    )
+    ) |> 
+  mutate(education = fct_relevel(education, c("Less than high school", "High school equivalent", "More than high school")),
+         sex = fct_relevel(sex, c("Male", "Female"))
+         ) |> 
+  filter(age > 21) |> 
+  drop_na()
+
+accel_df =
+  read_csv("data/nhanes_accel.csv", na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  pivot_longer(
+    starts_with("min"),
+    names_to = "minute",
+    names_prefix = "min",
+    values_to = "mims"
+    ) |> 
+  mutate(minute = as.numeric(minute))
+
+nhanes = left_join(demo_df, accel_df, by = "seqn")
 ```
+
+## Table of number of men and women in each education category
+```{r}
+nhanes |> 
+  group_by(sex, education) |> 
+  summarise(
+    count=n()
+  ) |> 
+  knitr::kable(digits=2)
+```
+
+## Visualization of age distributions for men and women in each education category
+```{r}
+nhanes |> 
+  ggplot(aes(x = sex, y = age, color = sex)) +
+  geom_boxplot() +
+  facet_grid(.~education) 
+```
+
+The education category with the most males and the most females is more than high school. There are slightly more females in the less than high school category than males. People with more than a high school education tend to be younger those with less than high school or high school equivalent. However, the distributions of the ages for all of the age categories do overlap. 
+
+ 
+```{r}
+nhanes = 
+  nhanes |> 
+  group_by(seqn) |> 
+  mutate(
+    total_activity = sum(mims, na.rm = TRUE))
+
+nhanes |> 
+  ggplot(aes(x = age, y = total_activity, color = sex))+
+  geom_point() +
+  geom_smooth() +
+  facet_grid(.~education)+
+  labs(
+    x = "Age",
+    y = "Total Activity (MIMS)"
+  )
+```
+The total activity tends to decrease with age within each education level for both sexes. However, there is a lot of noise within each education level, but especially within more than high school. Women tend to have higher total activity within the high school equivalent and more than high school categories than males. 
+
+
+
+```{r}
+nhanes |> 
+  ggplot(aes(x = minute, y = mims, color = sex))+
+#  geom_point(alpha = .1)+
+  geom_smooth() +
+  facet_grid(.~education)
+```
+Total activity tends to increase as the day goes on before decreasing again. Women tend to have higher total activity than males. For those with more than high school, the high point of total activity is stable for longer than that of the other education categories. 
+
 
