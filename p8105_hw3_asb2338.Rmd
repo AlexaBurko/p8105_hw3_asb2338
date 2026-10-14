@@ -48,7 +48,7 @@ tmax has `r sum(is.na(ny_noaa$tmax))` missing observations, and
 tmin has `r sum(is.na(ny_noaa$tmin))` missing observations 
 
 ## Data cleaning
-```{r}
+```{r message=F, warning=FALSE}
 
   noaa_df =
     ny_noaa |> 
@@ -64,7 +64,7 @@ tmin has `r sum(is.na(ny_noaa$tmin))` missing observations
 ```
 I converted the precipitation variable from tenths of mm to mm and I conveted tmax and tmin from tenths of degrees celcius to degrees celcius
 
-```{r}
+```{r message=F, warning=FALSE}
 noaa_df |> 
   count(snow) |> 
   arrange(desc(n))
@@ -72,7 +72,7 @@ noaa_df |>
 
 The most commonly observed values for snowfall are 0 mm, 25 mm, and 13 mm. It makes sense that the most commonly observed value for snowfall is 0 mm because it does not snow at all most days.
 
-```{r}
+```{r message=F, warning=FALSE}
 noaa_df |> 
   filter(month %in% c(1,7)) |> 
   mutate(
@@ -95,7 +95,7 @@ noaa_df |>
 ```
 The temperature is lower and more variable in January than in July. There seems to be at least one outlier in July. Some of the other points may be considered outliers, though we would need to do further analyses to confirm this. 
 
-```{r}
+```{r message=F, warning=FALSE}
 plot_temp = noaa_df |> 
   ggplot(aes(x = tmin, y = tmax))+
   geom_hex() +  
@@ -120,7 +120,7 @@ plot_temp + plot_snow
 # Problem 2
 
 ## Load, tidy, and merge data sets
-```{r}
+```{r message=F, warning=FALSE}
 demo_df =
   read_csv("data/nhanes_covar.csv", skip = 4, na = c("", "NA", ".")) |>
   janitor::clean_names() |>
@@ -158,7 +158,7 @@ nhanes = left_join(demo_df, accel_df, by = "seqn")
 ```
 
 ## Table of number of men and women in each education category
-```{r}
+```{r message=F, warning=FALSE}
 nhanes |> 
   group_by(sex, education) |> 
   summarise(
@@ -168,7 +168,7 @@ nhanes |>
 ```
 
 ## Visualization of age distributions for men and women in each education category
-```{r}
+```{r message=F, warning=FALSE}
 nhanes |> 
   ggplot(aes(x = sex, y = age, color = sex)) +
   geom_boxplot() +
@@ -178,7 +178,7 @@ nhanes |>
 The education category with the most males and the most females is more than high school. There are slightly more females in the less than high school category than males. People with more than a high school education tend to be younger those with less than high school or high school equivalent. However, the distributions of the ages for all of the age categories do overlap. 
 
  
-```{r}
+```{r message=F, warning=FALSE}
 nhanes = 
   nhanes |> 
   group_by(seqn) |> 
@@ -199,7 +199,7 @@ The total activity tends to decrease with age within each education level for bo
 
 
 
-```{r}
+```{r message=F, warning=FALSE}
 nhanes |> 
   ggplot(aes(x = minute, y = mims, color = sex))+
 #  geom_point(alpha = .1)+
@@ -210,3 +210,90 @@ Total activity tends to increase as the day goes on before decreasing again. Wom
 
 
 # Problem 3
+```{r message=F, warning=FALSE}
+jan2020_df =
+  read_csv("data/citibike/Jan 2020 Citi.csv", na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  mutate(year = 2020,
+         month = "January")
+
+july2020_df =
+  read_csv("data/citibike/July 2020 Citi.csv", na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  mutate(year = 2020,
+         month = "July")
+
+jan2024_df =
+  read_csv("data/citibike/Jan 2024 Citi.csv", na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  mutate(year = 2024,
+         month = "January")
+
+july2024_df =
+  read_csv("data/citibike/July 2024 Citi.csv", na = c("", "NA", ".")) |>
+  janitor::clean_names() |>
+  mutate(year = 2024,
+         month = "July")
+
+citi_bike_df <- bind_rows(jan2020_df, july2020_df, jan2024_df, july2024_df) |> 
+  mutate(weekdays = factor(weekdays, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))) 
+```
+The resulting data set has `r nrow(citi_bike_df)` observations and `r ncol(citi_bike_df)` variables. This data set contains the following variables: `r colnames(citi_bike_df)`. 
+
+## table showing the total number of rides in each combination of year and month separating casual riders and Citi Bike members
+```{r message=F, warning=FALSE}
+citi_bike_df |> 
+  group_by(year, month, member_casual) |> 
+  summarize(
+    total_rides=n()
+  ) |> 
+  pivot_wider(
+    names_from = member_casual,
+    values_from = total_rides
+  ) |> 
+  knitr::kable(digits=2)
+```
+There are more rides from members than casual riders in January of 2020 and July of 2024, while there are more rides from casual riders than members in July of 2020 and January of 2024. 
+
+## table showing the 5 most popular starting stations for July 2024
+```{r message=F, warning=FALSE}
+citi_bike_df |> 
+  filter(year == 2024,
+         month == "July") |> 
+  group_by(start_station_name) |> 
+  summarize(
+    total_rides=n()) |> 
+  arrange(desc(total_rides)) |> 
+  head(n=5) |> 
+  knitr::kable(digits=2)
+```
+
+## plots of effects of day of the week, month, and year on median ride duration
+```{r message=F, warning=FALSE}
+citi_bike_df |> 
+  group_by(year, month, weekdays) |> 
+  mutate(median_ride = median(duration, na.rm = TRUE)) |> 
+  ggplot(aes(x = weekdays, y = median_ride, color = month, group = month))+
+  geom_point()+
+  geom_line()+
+  facet_grid(.~year)+
+  labs(
+    x = "Day of the week",
+    y = "Median Ride Duration"
+  ) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+```
+In both 2020 and 2024, median ride duration is higher in July than in January. However, the median ride duration in July of 2020 is much higher than the median ride duration in July of 2024, and median ride duration is slightly higher in January of 2020 than in January of 2024. 
+In 2020, median ride duration sharply increased on Saturdays and Sundays compared to during the week days. In July of 2024, median ride duration also rose sharply on Saturdays. However, in January of 2024, median ride duration only rose slightly on Saturdays before decreasing to a lower duration than most of the week days on Sundays. 
+
+##  figure that shows the impact of month, membership status, and bike type on the distribution of ride duration
+```{r message=F, warning=FALSE}
+citi_bike_df |> 
+    filter(year == 2024) |> 
+  group_by(month, member_casual, rideable_type) |> 
+  ggplot(aes(x = duration, fill = month))+
+  geom_histogram() +
+  facet_grid(member_casual~month~rideable_type)
+```
+
+
