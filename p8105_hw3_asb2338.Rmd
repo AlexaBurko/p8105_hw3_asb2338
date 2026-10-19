@@ -37,15 +37,15 @@ data("ny_noaa")
 ```
 The data set has `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables. This data set contains the following variables: `r colnames(ny_noaa)`. 
 
-The average precipitation in the data set is `r round(mean(ny_noaa$prcp, na.rm = TRUE),2)` tenths of mm, the average snowfall in the data set is `r round(mean(ny_noaa$snow, na.rm = TRUE),2)` mm, and the average snow depth in the data set is `r round(mean(ny_noaa$snwd, na.rm = TRUE),2)` mm. 
+The average precipitation in the data set is `r round(mean(pull(ny_noaa, prcp), na.rm = TRUE),2)` tenths of mm, the average snowfall in the data set is `r round(mean(pull(ny_noaa, snow), na.rm = TRUE),2)` mm, and the average snow depth in the data set is `r round(mean(pull(ny_noaa, snwd), na.rm = TRUE),2)` mm. 
 
-Missing data is a big issue in this data set. The ID variable and the date variable both have `r sum(is.na(ny_noaa$id))` and `r sum(is.na(ny_noaa$date))` missing observations. However, the rest of the variables all have missing data.
+Missing data is a big issue in this data set. The ID variable and the date variable both have `r sum(is.na(pull(ny_noaa, id)))` and `r sum(is.na(pull(ny_noaa, date)))` missing observations. However, the rest of the variables all have missing data.
 
-prcp has `r sum(is.na(ny_noaa$prcp))` missing observations, 
-snow has `r sum(is.na(ny_noaa$snow))` missing observations,
-snwd has `r sum(is.na(ny_noaa$snwd))` missing observations, 
-tmax has `r sum(is.na(ny_noaa$tmax))` missing observations, and
-tmin has `r sum(is.na(ny_noaa$tmin))` missing observations 
+prcp has `r sum(is.na(pull(ny_noaa, prcp)))` missing observations, 
+snow has `r sum(is.na(pull(ny_noaa, snow)))` missing observations,
+snwd has `r sum(is.na(pull(ny_noaa, snwd)))` missing observations, 
+tmax has `r sum(is.na(pull(ny_noaa, tmax)))` missing observations, and
+tmin has `r sum(is.na(pull(ny_noaa, tmin)))` missing observations 
 
 ## Data cleaning
 ```{r message=F, warning=FALSE}
@@ -175,7 +175,9 @@ nhanes |>
   facet_grid(.~education) 
 ```
 
-The education category with the most males and the most females is more than high school. There are slightly more females in the less than high school category than males. People with more than a high school education tend to be younger those with less than high school or high school equivalent. However, the distributions of the ages for all of the age categories do overlap. 
+The education category with the most males and the most females is more than high school. There are slightly more females in the less than high school category than males. 
+
+People with more than a high school education tend to be younger than those with less than high school or high school equivalent. However, the distributions of the ages for all of the age categories do overlap. 
 
  
 ```{r message=F, warning=FALSE}
@@ -202,8 +204,8 @@ The total activity tends to decrease with age within each education level for bo
 ```{r message=F, warning=FALSE}
 nhanes |> 
   ggplot(aes(x = minute, y = mims, color = sex))+
-#  geom_point(alpha = .1)+
-  geom_smooth() +
+  geom_point(alpha=.05)+
+    geom_smooth() +
   facet_grid(.~education)
 ```
 Total activity tends to increase as the day goes on before decreasing again. Women tend to have higher total activity than males. For those with more than high school, the high point of total activity is stable for longer than that of the other education categories. 
@@ -295,5 +297,5 @@ citi_bike_df |>
   geom_histogram() +
   facet_grid(member_casual~month~rideable_type)
 ```
-
+All of the distributions are right-skewed. The combination of month, membership status, and bike type that resulted in the highest ride duration was July, member, and electric bike. The combination of month, membership status, and bike type that resulted in the lowest ride duration was January, casual, and classic bike. 
 
